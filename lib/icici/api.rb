@@ -14,8 +14,19 @@ module Icici
     AGGR_ID   = ENV['AGGR_ID']
     APIKEY    = ENV['API_KEY']
 
-    def self.registration_status(corp_id, user_id)
+    def self.registration(corp_id, user_id)
       url = "#{BASE_URI}/api/Corporate/CIB/v1/Registration"
+      make_request(url, {
+        "AGGRNAME": AGGR_NAME,
+        "AGGRID":   AGGR_ID,
+        "CORPID":   corp_id,
+        "USERID":   user_id,
+        "URN":      URN,
+      })
+    end
+
+    def self.registration_status(corp_id, user_id)
+      url = "#{BASE_URI}/api/Corporate/CIB/v1/RegistrationStatus"
       make_request(url, {
         "AGGRNAME": AGGR_NAME,
         "AGGRID":   AGGR_ID,
@@ -32,9 +43,10 @@ module Icici
         CORPID:   corp_id,
         USERID:   user_id,
         UNIQUEID: uniq_id,
-        URN:      URN
+        URN:      URN,
+        AMOUNT:   1.00.to_s
       }
-      make_request("#{BASE_URL}/api/Corporate/CIB/v1/TransactionOTP", payload)
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/TransactionOTP", payload)
     end
 
     # Standard Response Format after Decryption:
@@ -52,7 +64,7 @@ module Icici
         UNIQUEID: uniq_id,
         URN:      URN,
       }
-      make_request("#{BASE_URL}/api/Corporate/CIB/v1/TransactionInquiry", payload)
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/TransactionInquiry", payload)
     end
 
     # Standard Response Format after decryption:
@@ -68,14 +80,72 @@ module Icici
     #     "CURRENCY"=>"INR"}
 
     def self.fetch_balance(corp_id, user_id, account_num)
-      payload  = {
+      payload = {
         CORPID:    corp_id,
         USERID:    user_id,
         AGGRID:    AGGR_ID,
         URN:       URN,
         ACCOUNTNO: account_num
       }
-      make_request("#{BASE_URL}/api/Corporate/CIB/v1/BalanceInquiry", payload)
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/BalanceInquiry", payload)
+    end
+
+    # {"URN"=>"snap",
+    # "AGGR_ID"=>"AGGR0082",
+    # "USER_ID"=>"CIBTESTING6",
+    # "CORP_ID"=>"CIBNEXT",
+    # "Record"=>{"VALUEDATE"=>"11-08-2015",
+    #            "AMOUNT"=>"400.00",
+    #            "CHEQUENO"=>"",
+    #            "TXNDATE"=>"27-07-2017 23:21:42",
+    #            "REMARKS"=>"",
+    #            "TRANSACTIONID"=>"S27338118",
+    #            "TYPE"=>"DR",
+    #            "BALANCE"=>"10,50,510.00"},
+    # "RESPONSE"=>"SUCCESS",
+    # "ACCOUNTNO"=>"000405001257"}
+
+    def self.fetch_transactions(corp_id, user_id, account_num, from: 30.days.ago.to_date, to: Date.current)
+      payload = {
+        CORPID:    corp_id,
+        USERID:    user_id,
+        AGGRID:    AGGR_ID,
+        URN:       URN,
+        ACCOUNTNO: account_num,
+        FROMDATE:  from.strftime('%e-%m-%Y'),
+        TODATE:    to.strftime('%e-%m-%Y')
+      }
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/AccountStatement", payload)
+    end
+
+    # Standard Response Format after decryption:
+    #
+    # {"REQID"=>"277914",
+    #  "STATUS"=>"SUCCESS",
+    #  "UNIQUEID"=>"adsfink",
+    #  "RESPONSE"=>"SUCCESS",
+    #  "URN"=>"snap"}
+
+    def self.execute_transfer(uniq_id:, debit_acc:, credit_acc:, ifsc:, amount:, txn_type:, payee_name:, remarks:, otp: nil)
+      payload = {
+        AGGRID:        AGGR_ID,
+        AGGRNAME:      AGGR_NAME,
+        CORPID:        corp_id,
+        USERID:        user_id,
+        URN:           urn,
+        UNIQUEID:      uniq_id,
+        DEBITACC:      debit_acc,
+        CREDITACC:     credit_acc,
+        IFSC:          ifsc,
+        AMOUNT:        1.00.to_s,
+        CURRENCY:      "INR",
+        TXNTYPE:       txn_type,
+        PAYEENAME:     payee_name,
+        REMARKS:       remarks,
+        WORKFLOW_REQD: "N ",
+        OTP:           otp.to_i
+      }
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/Transaction", payload)
     end
 
     def self.make_request(url, payload)
