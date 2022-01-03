@@ -42,9 +42,9 @@ module Icici
         AGGRNAME: AGGR_NAME,
         CORPID:   corp_id,
         USERID:   user_id,
-        UNIQUEID: uniq_id,
         URN:      URN,
-        AMOUNT:   1.00.to_s
+        UNIQUEID: uniq_id,
+        AMOUNT:   "1.0"
       }
       make_request("#{BASE_URI}/api/Corporate/CIB/v1/TransactionOTP", payload)
     end
@@ -105,7 +105,7 @@ module Icici
     # "RESPONSE"=>"SUCCESS",
     # "ACCOUNTNO"=>"000405001257"}
 
-    def self.fetch_transactions(corp_id, user_id, account_num, from: 30.days.ago.to_date, to: Date.current)
+    def self.fetch_transactions(corp_id, user_id, account_num, from: Date.today - 30, to: Date.today)
       payload = {
         CORPID:    corp_id,
         USERID:    user_id,
@@ -126,24 +126,23 @@ module Icici
     #  "RESPONSE"=>"SUCCESS",
     #  "URN"=>"snap"}
 
-    def self.execute_transfer(uniq_id:, debit_acc:, credit_acc:, ifsc:, amount:, txn_type:, payee_name:, remarks:, otp: nil)
+    def self.execute_transfer(corp_id, user_id, uniq_id, debit_acc, credit_acc, ifsc, amount, txn_type, payee_name, remarks, otp)
       payload = {
-        AGGRID:        AGGR_ID,
-        AGGRNAME:      AGGR_NAME,
-        CORPID:        corp_id,
-        USERID:        user_id,
-        URN:           urn,
-        UNIQUEID:      uniq_id,
-        DEBITACC:      debit_acc,
-        CREDITACC:     credit_acc,
-        IFSC:          ifsc,
-        AMOUNT:        1.00.to_s,
-        CURRENCY:      "INR",
-        TXNTYPE:       txn_type,
-        PAYEENAME:     payee_name,
-        REMARKS:       remarks,
-        WORKFLOW_REQD: "N ",
-        OTP:           otp.to_i
+        AGGRID:    AGGR_ID,
+        AGGRNAME:  AGGR_NAME,
+        CORPID:    corp_id,
+        USERID:    user_id,
+        URN:       URN,
+        UNIQUEID:  uniq_id,
+        DEBITACC:  debit_acc,
+        CREDITACC: credit_acc,
+        IFSC:      ifsc,
+        AMOUNT:    1.00.to_s,
+        CURRENCY:  "INR",
+        TXNTYPE:   txn_type,
+        PAYEENAME: payee_name,
+        REMARKS:   remarks,
+        OTP:       otp.to_i,
       }
       make_request("#{BASE_URI}/api/Corporate/CIB/v1/Transaction", payload)
     end
