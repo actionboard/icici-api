@@ -44,9 +44,9 @@ module Icici
         USERID:   user_id,
         URN:      URN,
         UNIQUEID: uniq_id,
-        AMOUNT:   "1.0"
+        AMOUNT:   "1.00"
       }
-      make_request("#{BASE_URI}/api/Corporate/CIB/v1/TransactionOTP", payload)
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/Create", payload)
     end
 
     # Standard Response Format after Decryption:
@@ -128,23 +128,25 @@ module Icici
 
     def self.execute_transfer(corp_id, user_id, uniq_id, debit_acc, credit_acc, ifsc, amount, txn_type, payee_name, remarks, otp)
       payload = {
-        AGGRID:    AGGR_ID,
-        AGGRNAME:  AGGR_NAME,
-        CORPID:    corp_id,
-        USERID:    user_id,
-        URN:       URN,
-        UNIQUEID:  uniq_id,
-        DEBITACC:  debit_acc,
-        CREDITACC: credit_acc,
-        IFSC:      ifsc,
-        AMOUNT:    1.00.to_s,
-        CURRENCY:  "INR",
-        TXNTYPE:   txn_type,
-        PAYEENAME: payee_name,
-        REMARKS:   remarks,
-        OTP:       otp.to_i,
+        AGGRID:          AGGR_ID,
+        AGGRNAME:        AGGR_NAME,
+        CORPID:          corp_id,
+        USERID:          user_id,
+        URN:             URN,
+        UNIQUEID:        uniq_id,
+        DEBITACC:        debit_acc,
+        CREDITACC:       credit_acc,
+        IFSC:            ifsc,
+        AMOUNT:          "1.0",
+        CURRENCY:        "INR",
+        TXNTYPE:         txn_type,
+        PAYEENAME:       payee_name,
+        REMARKS:         remarks,
+        OTP:             otp,
+        CUSTOMERINDUCED: "N",
+        WORKFLOW_REQD:   "N"
       }
-      make_request("#{BASE_URI}/api/Corporate/CIB/v1/Transaction", payload)
+      make_request("#{BASE_URI}/api/Corporate/CIB/v1/TransactionOTP", payload)
     end
 
     def self.make_request(url, payload)
@@ -156,7 +158,7 @@ module Icici
       enc_data = encipher_data(payload.to_json, key, iv)
       body     = {
         "requestId":            SecureRandom.hex,
-        "service":              "service",
+        "service":              "",
         "encryptedKey":         encrypt(key),
         "encryptedData":        enc_data,
         "oaepHashingAlgorithm": "NONE",
@@ -166,7 +168,11 @@ module Icici
                                method:  :post,
                                body:    body,
                                headers: headers)
+      puts url
+      puts payload.to_json
+      puts body
       puts response.code
+      puts response.body
       response = JSON.parse(response.body)
       if response['success'].to_s == 'false'
         puts response
@@ -211,3 +217,5 @@ module Icici
 
   end
 end
+
+
