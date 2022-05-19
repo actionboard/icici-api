@@ -167,7 +167,11 @@ module Icici
       response = HTTParty.post(url,
                                method:  :post,
                                body:    body,
-                               headers: headers)
+                               headers: headers,
+                               http_proxyaddr: ENV['HTTP_PROXY_ADDR'],
+                               http_proxyport: ENV['HTTP_PROXY_PORT'],
+                               http_proxyuser: ENV['HTTP_PROXY_USER'],
+                               http_proxypass: ENV['HTTP_PROXY_PASS'])
       puts url
       puts payload.to_json
       puts body
