@@ -8,7 +8,7 @@ require_relative 'api/version'
 
 module Icici
   module Api
-    BASE_URI  = 'https://apibankingonesandbox.icicibank.com'.freeze
+    BASE_URI  = ENV.fetch('ICICI_PROD_URI') { 'https://apibankingonesandbox.icicibank.com' }
     URN       = ENV['URN']
     AGGR_NAME = ENV['AGGR_NAME']
     AGGR_ID   = ENV['AGGR_ID']
